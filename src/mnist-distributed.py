@@ -17,7 +17,7 @@ def main():
                         help='number of data loading workers (default: 4)')
     parser.add_argument('-g', '--gpus', default=2, type=int,
                         help='number of gpus per node')
-    parser.add_argument('-nr', '--nr', default=1, type=int,
+    parser.add_argument('-nr', '--nr', default=0, type=int,  ## nr being 0 indicates master node.
                         help='ranking within the nodes')
     parser.add_argument('--epochs', default=10, type=int, metavar='N',
                         help='number of total epochs to run')
@@ -25,7 +25,7 @@ def main():
     args.world_size = args.gpus * args.nodes
     os.environ['MASTER_ADDR'] = '10.134.103.96' #'10.134.21.235'
     os.environ['MASTER_PORT'] = '10000'
-    mp.spawn(train, nprocs=args.gpus, args=(args,))
+    mp.spawn(train, nprocs=args.gpus, args=(args,)) ## nprocs: the total processes to spawn within one node
 
 
 class ConvNet(nn.Module):
@@ -99,7 +99,7 @@ def train(gpu, args):
             if (i + 1) % (25000 // (batch_size*args.world_size))  == 0 and gpu == 0:
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Time: {}'.format(epoch + 1, args.epochs, i + 1, total_step,
                                                                          loss.item(), str(datetime.now() - start)))
-    if gpu == 0:
+    if gpu == 0:  ## this condition implies the process with gpu(id) 0 in the master node performs the following operation
         print("Training complete in: " + str(datetime.now() - start))
 
 
